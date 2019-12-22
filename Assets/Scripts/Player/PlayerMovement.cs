@@ -1,119 +1,95 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    
+    //[SerializeField] private PlayerStats PlayerStats;
+    [SerializeField] private float jumpForce = 7;
+    [SerializeField] private float initialAngle;
+
     private Vector3 moveDirection;
+    private Animator moveAnimator;
+    private Quaternion moveRotation = Quaternion.identity;
     private Rigidbody rigidBody;
 
-    private float moveSpeed = 0f;
-    private float walkSpeed = 5f;
-    private float runSpeed = 7f;
-    private float crouchSpeed = 3f;
-    private float jumpSpeed = 20f;
-
-    private float gravity = 3f;
-
-    
+    public float turnSpeed = 20f;
 
     private CharacterController controller = null;
-    private PlayerStats playerStats = null;
-     
-    // Start is called before the first frame update
+
     private void Start()
     {
+        moveAnimator = GetComponent<Animator>();
         controller = GetComponent<CharacterController>();
-        playerStats = GetComponent<PlayerStats>();
         rigidBody = GetComponent<Rigidbody>();
     }
-
-    // Update is called once per frame
-    private void Update()
+    private void FixedUpdate()
     {
         Move();
     }
-
     private void Move()
     {
-        if (controller.isGrounded)
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+
+        moveDirection.Set(horizontal, 0f, vertical);
+        moveDirection.Normalize();
+        
+        bool hasHorizontalInput = !Mathf.Approximately(horizontal, 0f);
+        bool hasVerticalInput = !Mathf.Approximately(vertical, 0f);
+
+        bool isRunning = hasHorizontalInput || hasVerticalInput;
+        moveAnimator.SetBool("IsRunning", isRunning);
+
+        Vector3 desiredForward = Vector3.RotateTowards(transform.forward, moveDirection, turnSpeed * Time.deltaTime, 0f);
+        moveRotation = Quaternion.LookRotation(desiredForward);
+
+        if (IsGrounded() && Input.GetKeyDown(KeyCode.Space) && isRunning)
         {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-            moveDirection = new Vector3(moveX, 0f, moveZ);
-            moveDirection.Normalize();
-            moveDirection = transform.TransformDirection(moveDirection);
-
-            if(!Input.GetKey(KeyCode.LeftShift) && moveDirection == Vector3.zero)
-            {
-                Idle();
-            }
-            if (!Input.GetKey(KeyCode.LeftShift) && moveDirection == Vector3.zero)
-            {
-                Walk();
-            }
-            if (!Input.GetKey(KeyCode.LeftShift) && moveDirection == Vector3.zero)
-            {
-                Jump();
-            }
-
-            moveDirection *= moveSpeed;
-
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                Jump();
-            }
+            rigidBody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            moveAnimator.Play("Jump", -1, 0f);
         }
 
-        moveDirection.y -= gravity;
-
-        controller.Move(moveDirection * Time.deltaTime);
     }
 
+    private bool IsGrounded()
+    {
+        Physics.CheckCapsule(c)
+        return false;
+    }
+    private void OnAnimatorMove()
+    {
+        rigidBody.MovePosition(rigidBody.position + moveDirection * moveAnimator.deltaPosition.magnitude);
+        rigidBody.MoveRotation(moveRotation);
+    }
+
+    private void JumpAtAngle()
+    {
+        float gravity = Physics.gravity.magnitude;
+        // Selected angle in radians
+        float angle = initialAngle * Mathf.Deg2Rad;
+
+        // Positions of this object and the target on the same plane
+        Vector3 planarTarget = new Vector3(moveDirection.x, 0, moveDirection.z);
+        Vector3 planarPostion = new Vector3(transform.position.x, 0, transform.position.z);
+
+        // Planar distance between objects
+        float distance = Vector3.Distance(planarTarget, planarPostion);
+        // Distance along the y axis between objects
+        float yOffset = transform.position.y - moveDirection.y;
+
+        float initialVelocity = (1 / Mathf.Cos(angle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(angle) + yOffset));
+
+        Vector3 velocity = new Vector3(0, initialVelocity * Mathf.Sin(angle), initialVelocity * Mathf.Cos(angle));
+
+        // Rotate our velocity to match the direction between the two objects
+        float angleBetweenObjects = Vector3.Angle(Vector3.forward, planarTarget - planarPostion);
+        Vector3 finalVelocity = Quaternion.AngleAxis(angleBetweenObjects, Vector3.up) * velocity;
+
+        // Fire!
+        rigidBody.velocity = finalVelocity;
+
+        // Alternative way:
+        // rigid.AddForce(finalVelocity * rigid.mass, ForceMode.Impulse);
     
-
-    private void Jump()
-    {
-        moveDirection.y += jumpSpeed;
     }
 
-    private void Idle()
-    {
-        /*if (!playerStats.idleing)
-        {
-            playerStats.idleing = true;
-            playerStats.walking = false;
-            playerStats.running = false;
-        }
-
-        moveSpeed = walkSpeed;*/
-    }
-
-    private void Walk()
-    {
-        /*if (!playerStats.walking)
-        {
-            playerStats.idleing = false;
-            playerStats.walking = true;
-            playerStats.running = false;
-        }
-
-        moveSpeed = walkSpeed;*/
-    }
-
-    private void Run()
-    {
-        /*if (!playerStats.running)
-        {
-            playerStats.idleing = false;
-            playerStats.walking = false;
-            playerStats.running = true;
-        }
-
-        moveSpeed = runSpeed;
-        playerStats.RemoveStamina(playerStats.decreaseStaminaAmount * Time.detaTime);*/
-    }
 }

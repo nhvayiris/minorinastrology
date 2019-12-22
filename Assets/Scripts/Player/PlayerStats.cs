@@ -1,13 +1,19 @@
 ﻿using UnityEngine;
 
+[CreateAssetMenu(fileName = "Player Stats")]
 public class PlayerStats : CharacterStats
 {
-    [Header("Player Stats")]
+    [Header("Player Stats")] 
     public int experiencePoints;
     public int gold;
+    
+    [SerializeField] private int aether;
+    [SerializeField] private int stamina;
+    [SerializeField] private float maxAdrenaline = 5f;
 
     [Header("Decrease and Regen Variables")]
-    public float regenHealthAmount = 0f;
+    [SerializeField] private float regenHealthAmount;
+
     public float regenStaminaAmount = 0f;
     public float regenAetherAmount = 0f;
 
@@ -17,67 +23,36 @@ public class PlayerStats : CharacterStats
     public float decreaseAetherAmount = 0f;
     public float decreaseAdrenalineAmount = 0f;
 
+    public float RegenHealthAmount => regenHealthAmount;
+
 
     private PlayerHUD playerHUD = null;
-    private void Start()
+    public override void LevelUp()
     {
-        playerHUD = GetComponent<PlayerHUD>();
-        SetDefaultStats();
+        base.LevelUp();
+
+        Health.AddToMax(20);
+        Stamina.AddToMax(20);
+        Aether.AddToMax(20);
+
+        //increase base stats
+        strength += 4;
+        intelligence += 4;
+        agility += 4;
+        vitality += 4;
     }
 
-    private void Update()
+    public override void SetDefaultStats()
     {
-            if (health < maxHealth && !inCombat)
-            {
-                RegenHealth();
-            }
-
-            if (stamina < maxStamina && !inCombat)
-            {
-                RegenStamina();
-            }
-
-            if (aether < maxAether && !inCombat)
-            {
-                RegenAether();
-            }
-
-        AdrenalineManagement();
-        
-
-        /*
-        //test key
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            LevelUp();
-        }*/
-    }
-
-    public void SetDefaultStats()
-    {
-        level = 1;
+        base.SetDefaultStats();
         experiencePoints = 0;
         gold = 0;
 
-        maxHealth = 50f;
-        health = maxHealth;
-        maxAether = 50f;
-        aether = maxAether;
-        maxStamina = 50f;
-        stamina = maxStamina;
-        maxAdrenaline = 5f;
-        adrenaline = 0f;
+        Aether = aether;
+        Stamina = stamina;
+        Adrenaline = 0;
+        Adrenaline.SetMax(maxAdrenaline);
 
-        strength = 1f;
-        intelligence = 1f;
-        agility = 1f;
-        vitality = 1f;
-        attack = 1f;
-        defense = 1;
-        evasion = 1f;
-        hitRate = 1f;
-
-        regenHealthAmount = 1f;
         regenStaminaAmount = 1f;
         regenAetherAmount = 1f;
 
@@ -85,120 +60,6 @@ public class PlayerStats : CharacterStats
         buildAdrenalineAmount = 0.08f;
         decreaseAdrenalineAmount = 0.08f;
 
-}
-
-    //regen stat
-    public void RegenHealth()
-    {
-        Heal(regenHealthAmount * Time.deltaTime);
-        playerHUD.UpdateHealthStat();
-    }
-
-    public void RegenStamina()
-    {
-        AddStamina(regenStaminaAmount * Time.deltaTime);
-        isStaminaRegenerating = true;
-        playerHUD.UpdateStaminaStat();
-    }
-
-    public void RegenAether()
-    {
-        AddAether(regenAetherAmount * Time.deltaTime);
-        playerHUD.UpdateAetherStat();
-    }
-
-    public void BuildAdrenaline()
-    {
-        AddAdrenaline(buildAdrenalineAmount * Time.deltaTime);
-        playerHUD.UpdateAdrenalineStat();
-    }
-
-    //decrease stat
-    public void DecreaseStamina()
-    {
-        RemoveStamina(decreaseStaminaAmount * Time.deltaTime);
-        isStaminaRegenerating = false;
-        playerHUD.UpdateStaminaStat();
-    }
-
-    public void DecreaseAether()
-    {
-        RemoveAether(decreaseAetherAmount * Time.deltaTime);
-        playerHUD.UpdateAetherStat();
-    }
-
-    public void DecreaseAdrenaline()
-    {
-        RemoveAdrenaline(decreaseAdrenalineAmount * Time.deltaTime);
-        playerHUD.UpdateAdrenalineStat();
-    }
-
-    public override void LevelUp()
-    {
-        base.LevelUp();
-    }
-
-    public void AdrenalineManagement()
-    {
-        if (inCombat && !isStaminaRegenerating)
-        {
-            BuildAdrenaline();
-        }
-
-        if (!inCombat && isStaminaRegenerating)
-        {
-            DecreaseAdrenaline();
-        }
-
-    }
-
-    public void TransferStaminaEnergyToAether()
-    {
-        if (inCombat)
-        {
-            DecreaseStamina();
-            RegenAether();
-
-            if (aether == maxAether)
-            {
-                //do special combo
-                //physical weapon becomes magical weapon
-                //afflicts elemental condition
-                //then resets adrenaline to zero
-                //set stamina to half
-            }
-        }
-
-        if (!inCombat)
-        {
-            RegenStamina();
-            DecreaseAether();
-        }
-    }
-
-    public void TransferAetherEnergyToStamina()
-    {
-        if (inCombat)
-        {
-            DecreaseAether();
-            RegenStamina();
-
-            if (stamina == maxStamina)
-            {
-                //do special combo
-                //magical weapon becomes physical weapon
-                //inflicts ailment condition
-                //then resets adrenaline to zero
-                //set aether to half
-            }
-        }
-
-        if (!inCombat)
-        {
-            RegenAether();
-            DecreaseStamina();
-
-        }
     }
 
 }

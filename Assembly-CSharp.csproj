@@ -65,10 +65,11 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\CharacterStats.cs" />
     <Compile Include="Assets\Scripts\HUD\PlayerHUD.cs" />
-    <Compile Include="Assets\Scripts\Player\PlayerMagicMechanic.cs" />
+    <Compile Include="Assets\Scripts\Player\Player.cs" />
+    <Compile Include="Assets\Scripts\Player\PlayerCombo.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerMovement.cs" />
-    <Compile Include="Assets\Scripts\Player\PlayerPhysicalMechanic.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerStats.cs" />
+    <Compile Include="Assets\Scripts\Stat.cs" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Users/PC/Documents/GitHub/Minor In Astrology/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
