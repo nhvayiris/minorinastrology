@@ -2,23 +2,20 @@
 
 public class PlayerMovement : MonoBehaviour
 {
-    //[SerializeField] private PlayerStats PlayerStats;
-    [SerializeField] private float jumpForce = 7;
-    [SerializeField] private float initialAngle;
-
     private Vector3 moveDirection;
     private Animator moveAnimator;
     private Quaternion moveRotation = Quaternion.identity;
     private Rigidbody rigidBody;
 
-    public float turnSpeed = 20f;
+    public float turnSpeed = 5f;
+    public float jumpForce = 7f;
 
-    private CharacterController controller = null;
+    //private CharacterController controller = null;
 
     private void Start()
     {
         moveAnimator = GetComponent<Animator>();
-        controller = GetComponent<CharacterController>();
+        //controller = GetComponent<CharacterController>();
         rigidBody = GetComponent<Rigidbody>();
     }
     private void FixedUpdate()
@@ -42,7 +39,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 desiredForward = Vector3.RotateTowards(transform.forward, moveDirection, turnSpeed * Time.deltaTime, 0f);
         moveRotation = Quaternion.LookRotation(desiredForward);
 
-        if (IsGrounded() && Input.GetKeyDown(KeyCode.Space) && isRunning)
+        if (Input.GetKeyDown(KeyCode.Space) && isRunning)
         {
             rigidBody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             moveAnimator.Play("Jump", -1, 0f);
@@ -50,18 +47,13 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    private bool IsGrounded()
-    {
-        Physics.CheckCapsule(c)
-        return false;
-    }
     private void OnAnimatorMove()
     {
         rigidBody.MovePosition(rigidBody.position + moveDirection * moveAnimator.deltaPosition.magnitude);
         rigidBody.MoveRotation(moveRotation);
     }
 
-    private void JumpAtAngle()
+    /*private void JumpAtAngle()
     {
         float gravity = Physics.gravity.magnitude;
         // Selected angle in radians
@@ -90,6 +82,6 @@ public class PlayerMovement : MonoBehaviour
         // Alternative way:
         // rigid.AddForce(finalVelocity * rigid.mass, ForceMode.Impulse);
     
-    }
+    }*/
 
 }
