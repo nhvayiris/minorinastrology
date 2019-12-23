@@ -6,27 +6,39 @@ public class PlayerMovement : MonoBehaviour
     private Animator moveAnimator;
     private Quaternion moveRotation = Quaternion.identity;
     private Rigidbody rigidBody;
+    private Vector3 moveInput;
+    private Vector3 moveVelocity;
+    private Camera mainCamera;
 
-    public float turnSpeed = 5f;
-    public float jumpForce = 7f;
+    public float MoveSpeed;
+    public float TurnSpeed = 5f;
+    public float JumpForce = 7f;
 
     //private CharacterController controller = null;
 
     private void Start()
     {
         moveAnimator = GetComponent<Animator>();
-        //controller = GetComponent<CharacterController>();
         rigidBody = GetComponent<Rigidbody>();
+        mainCamera = FindObjectOfType<Camera>();
+    }
+
+    private void Update()
+    {
+        Move();
+        
     }
     private void FixedUpdate()
     {
-        Move();
+        rigidBody.velocity = moveVelocity;
     }
     private void Move()
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
+        moveInput = new Vector3(horizontal, 0f, vertical);
+        moveVelocity = moveInput * MoveSpeed;
         moveDirection.Set(horizontal, 0f, vertical);
         moveDirection.Normalize();
         
@@ -36,15 +48,25 @@ public class PlayerMovement : MonoBehaviour
         bool isRunning = hasHorizontalInput || hasVerticalInput;
         moveAnimator.SetBool("IsRunning", isRunning);
 
-        Vector3 desiredForward = Vector3.RotateTowards(transform.forward, moveDirection, turnSpeed * Time.deltaTime, 0f);
+        Vector3 desiredForward = Vector3.RotateTowards(transform.forward, moveDirection, TurnSpeed * Time.deltaTime, 0f);
         moveRotation = Quaternion.LookRotation(desiredForward);
 
         if (Input.GetKeyDown(KeyCode.Space) && isRunning)
         {
-            rigidBody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            rigidBody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);
             moveAnimator.Play("Jump", -1, 0f);
         }
 
+        Ray cameraRay = mainCamera.ScreenPointToRay(Input.mousePosition);
+        Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
+        float rayLength;
+
+        if (groundPlane.Raycast(cameraRay, out rayLength))
+        {
+            Vector3 pointToLook = cameraRay.GetPoint(rayLength);
+            Debug.DrawLine(cameraRay.origin, pointToLook, Color.blue);
+            transform.LookAt(new Vector3(pointToLook.x, transform.position.y, pointToLook.z));
+        }
     }
 
     private void OnAnimatorMove()
@@ -53,35 +75,5 @@ public class PlayerMovement : MonoBehaviour
         rigidBody.MoveRotation(moveRotation);
     }
 
-    /*private void JumpAtAngle()
-    {
-        float gravity = Physics.gravity.magnitude;
-        // Selected angle in radians
-        float angle = initialAngle * Mathf.Deg2Rad;
-
-        // Positions of this object and the target on the same plane
-        Vector3 planarTarget = new Vector3(moveDirection.x, 0, moveDirection.z);
-        Vector3 planarPostion = new Vector3(transform.position.x, 0, transform.position.z);
-
-        // Planar distance between objects
-        float distance = Vector3.Distance(planarTarget, planarPostion);
-        // Distance along the y axis between objects
-        float yOffset = transform.position.y - moveDirection.y;
-
-        float initialVelocity = (1 / Mathf.Cos(angle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(angle) + yOffset));
-
-        Vector3 velocity = new Vector3(0, initialVelocity * Mathf.Sin(angle), initialVelocity * Mathf.Cos(angle));
-
-        // Rotate our velocity to match the direction between the two objects
-        float angleBetweenObjects = Vector3.Angle(Vector3.forward, planarTarget - planarPostion);
-        Vector3 finalVelocity = Quaternion.AngleAxis(angleBetweenObjects, Vector3.up) * velocity;
-
-        // Fire!
-        rigidBody.velocity = finalVelocity;
-
-        // Alternative way:
-        // rigid.AddForce(finalVelocity * rigid.mass, ForceMode.Impulse);
     
-    }*/
-
 }
